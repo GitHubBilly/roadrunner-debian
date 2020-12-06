@@ -434,6 +434,9 @@ EOF
             "${ROOTFS_BASE}/etc"
     install -m 0755 "${G_VENDOR_PATH}/${MACHINE}/profile" \
             "${ROOTFS_BASE}/etc"
+    install -d -m 0755 "${ROOTFS_BASE}/etc/profile.d"
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/set_window_title.sh" \
+            "${ROOTFS_BASE}/etc/profile.d"
 
     # Add RS485 mode configuration utility.
     install -m 0755 ${G_VENDOR_PATH}/${MACHINE}/rs485 \
@@ -708,8 +711,8 @@ EOF
     # BEGIN -- REVO i.MX7D cleanup
     remove-charmaps
     remove-locales
-    rm -rf "${RECOVERYFS_BASE}/usr/share/doc/"*
-    rm -rf "${RECOVERYFS_BASE}/var/lib/apt/lists/"*
+    rm -rf "${ROOTFS_BASE}/usr/share/doc/"*
+    rm -rf "${ROOTFS_BASE}/var/lib/apt/lists/"*
 
     # Restore APT source list to default Debian mirror.
     cat >"${ROOTFS_BASE}/etc/apt/sources.list" <<EOF
@@ -722,9 +725,10 @@ EOF
     # Limit kernel messages to the console.
     sed -i -e '/^#kernel.printk/s/^#*//' "${ROOTFS_BASE}/etc/sysctl.conf"
 
-    # Enable colorized `ls' for `root'.
+    # Enable colorized `ls' and alias h='history 50' for `root'.
     sed -i -e '/export LS/s/^# *//' -e '/eval.*dircolors/s/^# *//' \
-        -e '/alias ls/s/^# *//' "${ROOTFS_BASE}/root/.bashrc"
+        -e '/alias ls/s/^# *//' -e '/alias l=/a alias h="history 50"' \
+        "${ROOTFS_BASE}/root/.bashrc"
 
     # Prepare /var/log to be mounted as tmpfs.
     # NB: *~ is excluded from rootfs tarball.

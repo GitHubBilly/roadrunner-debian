@@ -441,6 +441,9 @@ EOF
             "${RECOVERYFS_BASE}/etc"
     install -m 0755 "${G_VENDOR_PATH}/${MACHINE}/profile" \
             "${RECOVERYFS_BASE}/etc"
+    install -d -m 0755 "${RECOVERYFS_BASE}/etc/profile.d"
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/set_window_title.sh" \
+            "${RECOVERYFS_BASE}/etc/profile.d"
 
     # Add RS485 mode configuration utility.
     install -m 0755 ${G_VENDOR_PATH}/${MACHINE}/rs485 \
@@ -726,9 +729,10 @@ EOF
     # Limit kernel messages to the console.
     sed -i -e '/^#kernel.printk/s/^#*//' "${RECOVERYFS_BASE}/etc/sysctl.conf"
 
-    # Enable colorized `ls' for `root'.
+    # Enable colorized `ls' and alias h='history 50' for `root'.
     sed -i -e '/export LS/s/^# *//' -e '/eval.*dircolors/s/^# *//' \
-        -e '/alias ls/s/^# *//' "${RECOVERYFS_BASE}/root/.bashrc"
+        -e '/alias ls/s/^# *//' -e '/alias l=/a alias h="history 50"' \
+        "${RECOVERYFS_BASE}/root/.bashrc"
 
     # Prepare /var/log to be mounted as tmpfs.
     # NB: *~ is excluded from recoveryfs tarball.
