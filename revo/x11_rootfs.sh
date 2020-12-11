@@ -438,9 +438,13 @@ EOF
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/set_window_title.sh" \
             "${ROOTFS_BASE}/etc/profile.d"
 
+    # Install redirect-web-ports.
+    install -m 0755 "${G_VENDOR_PATH}/resources/redirect-web-ports" \
+            "${ROOTFS_BASE}/usr/sbin"
+
     # Add RS485 mode configuration utility.
-    install -m 0755 ${G_VENDOR_PATH}/${MACHINE}/rs485 \
-            ${ROOTFS_BASE}/usr/bin
+    install -m 0755 "${G_VENDOR_PATH}/${MACHINE}/rs485" \
+            "${ROOTFS_BASE}/usr/bin"
 
     # Mount /tmp, /var/tmp and /var/log on tmpfs.
     install -m 0644 "${ROOTFS_BASE}/usr/share/systemd/tmp.mount" \
@@ -453,14 +457,6 @@ EOF
     # Mount systemd journal on tmpfs, /run/log/journal.
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/journald.conf" \
             "${ROOTFS_BASE}/etc/systemd"
-
-    # Install redirect-web-ports service.
-    install -m 0755 "${G_VENDOR_PATH}/${MACHINE}/systemd/redirect-web-ports" \
-            "${ROOTFS_BASE}/usr/sbin"
-    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/redirect-web-ports.service" \
-            "${ROOTFS_BASE}/lib/systemd/system"
-    ln -s '/lib/systemd/system/redirect-web-ports.service' \
-       "${ROOTFS_BASE}/etc/systemd/system/multi-user.target.wants"
 
     # Install flash-emmc service.
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/flash-emmc.service" \

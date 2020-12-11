@@ -445,9 +445,13 @@ EOF
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/set_window_title.sh" \
             "${RECOVERYFS_BASE}/etc/profile.d"
 
+    # Install redirect-web-ports.
+    install -m 0755 "${G_VENDOR_PATH}/resources/redirect-web-ports" \
+            "${RECOVERYFS_BASE}/usr/sbin"
+
     # Add RS485 mode configuration utility.
-    install -m 0755 ${G_VENDOR_PATH}/${MACHINE}/rs485 \
-            ${RECOVERYFS_BASE}/usr/bin
+    install -m 0755 "${G_VENDOR_PATH}/${MACHINE}/rs485" \
+            "${RECOVERYFS_BASE}/usr/bin"
 
     # Mount /tmp, /var/tmp and /var/log on tmpfs.
     install -m 0644 "${RECOVERYFS_BASE}/usr/share/systemd/tmp.mount" \
@@ -457,17 +461,9 @@ EOF
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/var-log.conf" \
             "${RECOVERYFS_BASE}/usr/lib/tmpfiles.d"
 
-    # Mount systemd journal on tmpfs
+    # Mount systemd journal on tmpfs, /run/log/journal.
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/journald.conf" \
             "${RECOVERYFS_BASE}/etc/systemd"
-
-    # Install redirect-web-ports service.
-    install -m 0755 "${G_VENDOR_PATH}/${MACHINE}/systemd/redirect-web-ports" \
-            "${RECOVERYFS_BASE}/usr/sbin"
-    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/redirect-web-ports.service" \
-            "${RECOVERYFS_BASE}/lib/systemd/system"
-    ln -s '/lib/systemd/system/redirect-web-ports.service' \
-       "${RECOVERYFS_BASE}/etc/systemd/system/multi-user.target.wants"
 
     # Install recover-emmc service.
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/recover-emmc.service" \
