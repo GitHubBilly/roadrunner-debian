@@ -135,6 +135,7 @@ make_debian_recoveryfs ()
     # cp -r ${G_VENDOR_PATH}/deb/smallstep/* \
     #    ${RECOVERYFS_BASE}/srv/local-apt-repository
 
+    cp -r ${G_VENDOR_PATH}/deb/firewalld/* \
        ${RECOVERYFS_BASE}/srv/local-apt-repository
     # END -- REVO i.MX7D security
 
@@ -349,7 +350,8 @@ protected_install can-utils
 # pm-utils
 # protected_install pm-utils
 
-# BEGIN -- REVO i.MX7D networking
+# BEGIN -- REVO i.MX7D networking and security
+protected_install firewalld
 # protected_install step-cli
 # protected_install step-certificates
 

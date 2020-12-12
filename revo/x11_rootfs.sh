@@ -130,6 +130,9 @@ make_debian_x11_rootfs ()
 
     cp -r ${G_VENDOR_PATH}/deb/smallstep/* \
        ${ROOTFS_BASE}/srv/local-apt-repository
+
+    cp -r ${G_VENDOR_PATH}/deb/firewalld/* \
+       ${ROOTFS_BASE}/srv/local-apt-repository
     # END -- REVO i.MX7D security
 
     # add mirror to source list
@@ -343,7 +346,8 @@ protected_install can-utils
 # pm-utils
 protected_install pm-utils
 
-# BEGIN -- REVO i.MX7D networking
+# BEGIN -- REVO i.MX7D networking and security
+protected_install firewalld
 protected_install step-cli
 protected_install step-certificates
 
