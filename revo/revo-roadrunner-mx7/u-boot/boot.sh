@@ -42,7 +42,7 @@ setenv recovery_request
 saveenv
 
 # Enable cgroup v2 and run-time security via apparmor.
-setenv kernelargs $kernelargs apparmor=1 security=apparmor systemd.unified_cgroup_hierarchy=1
+setenv kernelargs $kernelargs systemd.unified_cgroup_hierarchy=1 security=apparmor apparmor=1
 
 reset_pin=83
 usbdev=0
