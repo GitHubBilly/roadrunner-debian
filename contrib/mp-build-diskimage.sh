@@ -22,6 +22,7 @@
 #     See the function `mpip' below for a way of defining of `vm_ipv4'.
 #
 declare script_name=${0##*/}
+declare build_suite_commit=$1
 
 # Exit immediately on errors
 set -eE -o pipefail
@@ -33,6 +34,7 @@ shopt -s extglob
 : ${DISK_SIZE:='30G'}
 : ${MEMORY_SIZE:='2G'}
 : ${SSH_PUBKEY:="${HOME}/.ssh/id_rsa.pub"}
+: ${BUILD_SUITE_BRANCH_DEFAULT:='debian_buster_rr01'}
 : ${BUILD_DIR:='roadrunner_debian'}
 : ${OUTPUT_DIR:="${BUILD_DIR}/output"}
 : ${DEST_DIR:="${HOME}/output"}
@@ -291,7 +293,11 @@ echo "Cloning build suite..."
 $GIT init |& $TEE "/home/ubuntu/${OUTPUT_DIR}/git.log"
 $GIT remote add origin https://github.com/revolution-robotics/roadrunner-debian.git |& $TEE -a "/home/ubuntu/${OUTPUT_DIR}/git.log"
 $GIT fetch |& $TEE -a "/home/ubuntu/${OUTPUT_DIR}/git.log"
-$GIT checkout debian_buster_rr01 |& $TEE -a "/home/ubuntu/${OUTPUT_DIR}/git.log"
+if test ."$build_suite_commit" != .''; then
+    $GIT checkout -b "commit-${build_suite_commit:0:6}" "$build_suite_commit" |& $TEE -a "/home/ubuntu/${OUTPUT_DIR}/git.log"
+else
+    $GIT checkout "$BUILD_SUITE_BRANCH_DEFAULT" |& $TEE -a "/home/ubuntu/${OUTPUT_DIR}/git.log"
+fi
 echo "Deploying sources..."
 MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -c deploy |& $TEE "/home/ubuntu/${OUTPUT_DIR}/deploy.log"
 echo "Building all..."
