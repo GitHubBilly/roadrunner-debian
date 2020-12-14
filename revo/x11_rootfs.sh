@@ -798,10 +798,19 @@ make_x11_image ()
     {
         pr_info "Flashing \"BOOT\" partition"
         if test ."${LPARAM_TARBALL%%.*}" = .'provisionfs'; then
+            if test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_PROVISION_SCRIPT}"; then
+                pr_info "${UBOOT_PROVISION_SCRIPT} => ${UBOOT_SCRIPT}"
+                install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_PROVISION_SCRIPT}" \
+                        "${P1_MOUNT_DIR}/${UBOOT_SCRIPT}"
+            fi
+        elif test -f "${LPARAM_OUTPUT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
+            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
+                    "$P1_MOUNT_DIR"
 
-            # Install provision.scr as boot.scr
-            install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_PROVISION_SCRIPT}" \
+            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
+            install -m 0644 "${P1_MOUNT_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
                     "${P1_MOUNT_DIR}/${UBOOT_SCRIPT}"
+            echo "${ACCESS_CONTROL,,}" >"${P1_MOUNT_DIR}/access-control"
         elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
             install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
                     "$P1_MOUNT_DIR"
@@ -824,12 +833,20 @@ make_x11_image ()
         mkdir -p "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
 
         pr_info "Copying Debian images to /${G_IMAGES_DIR}"
-        if test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
+        if test -f "${LPARAM_OUTPUT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
+            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
+                    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
+
+            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
+            install -m 0644 "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
+                    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/${UBOOT_SCRIPT}"
+            echo "${ACCESS_CONTROL,,}" >"${P2_MOUNT_DIR}/${G_IMAGES_DIR}/access-control"
+        elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
             install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
                     "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
         fi
         install -m 0644 "${LPARAM_OUTPUT_DIR}/${BUILD_IMAGE_TYPE}" \
-           "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
+                "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
         # if test ."$MACHINE" = .'imx6ul-var-dart' ||
         #        test ."$MACHINE" = .'var-som-mx7' ||
         #        test ."$MACHINE" = .'revo-roadrunner-mx7'; then

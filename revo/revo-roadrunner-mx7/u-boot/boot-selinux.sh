@@ -41,8 +41,8 @@ sw_reset=$recovery_request
 setenv recovery_request
 saveenv
 
-# Enable cgroup v2 and "mandatory access control (MAC)" security via Apparmor.
-setenv kernelargs $kernelargs systemd.unified_cgroup_hierarchy=1 security=apparmor apparmor=1
+# Enable cgroup v2 and "mandatory access control (MAC)" security via SELinux.
+setenv kernelargs $kernelargs systemd.unified_cgroup_hierarchy=1 security=selinux selinux=1 enforcing=0
 
 reset_pin=83
 usbdev=0

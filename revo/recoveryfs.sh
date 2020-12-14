@@ -798,8 +798,17 @@ make_recovery_image ()
     flash_device ()
     {
         pr_info "Flashing \"BOOT\" partition"
-        if test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
-            install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" "$P1_MOUNT_DIR"
+        if test -f "${P1_MOUNT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
+            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
+                    "$P1_MOUNT_DIR"
+
+            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
+            install -m 0644 "${P1_MOUNT_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
+                    "${P1_MOUNT_DIR}/${UBOOT_SCRIPT}"
+            echo "${ACCESS_CONTROL,,}" >"${P1_MOUNT_DIR}/access-control"
+        elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
+            install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
+                    "$P1_MOUNT_DIR"
         fi
         install -m 0644 "${LPARAM_OUTPUT_DIR}/"*.dtb	"$P1_MOUNT_DIR"
         install -m 0644 "${LPARAM_OUTPUT_DIR}/${BUILD_IMAGE_TYPE}" \
@@ -819,7 +828,15 @@ make_recovery_image ()
         mkdir -p "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
 
         pr_info "Copying Debian images to /${G_IMAGES_DIR}"
-        if test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
+        if test -f "${LPARAM_OUTPUT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
+            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
+                    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
+
+            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
+            install -m 0644 "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
+                    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/${UBOOT_SCRIPT}"
+            echo "${ACCESS_CONTROL,,}" >"${P2_MOUNT_DIR}/${G_IMAGES_DIR}/access-control"
+        elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
             install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
                     "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
         fi
@@ -828,7 +845,7 @@ make_recovery_image ()
         # if test ."$MACHINE" = .'imx6ul-var-dart' ||
         #        test ."$MACHINE" = .'var-som-mx7' ||
         #        test ."$MACHINE" = .'revo-roadrunner-mx7'; then
-        #     cp ${LPARAM_OUTPUT_DIR}/recoveryfs.ubi.img \
+        #     install -m 0644 ${LPARAM_OUTPUT_DIR}/recoveryfs.ubi.img \
         #        ${P2_MOUNT_DIR}/${G_IMAGES_DIR}/
         # fi
         install -m 0644 "${LPARAM_OUTPUT_DIR}/${DEF_ROOTFS_TARBALL_NAME}" \
@@ -839,9 +856,9 @@ make_recovery_image ()
                 "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
 
         # pr_info "Copying NAND U-Boot to /${G_IMAGES_DIR}"
-        # cp "${LPARAM_OUTPUT_DIR}/${G_SPL_NAME_FOR_NAND}" \
+        # install -m 0644 "${LPARAM_OUTPUT_DIR}/${G_SPL_NAME_FOR_NAND}" \
         #    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
-        # cp "${LPARAM_OUTPUT_DIR}/${G_UBOOT_NAME_FOR_NAND}" \
+        # install -m 0644 "${LPARAM_OUTPUT_DIR}/${G_UBOOT_NAME_FOR_NAND}" \
         #    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
 
         pr_info "Copying MMC U-Boot to /${G_IMAGES_DIR}"
