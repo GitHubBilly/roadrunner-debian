@@ -260,7 +260,7 @@ apt update
 protected_install locales
 protected_install ntp
 protected_install openssh-server
-protected_install nfs-common
+# protected_install nfs-common
 
 # packages required when flashing emmc
 protected_install dosfstools
