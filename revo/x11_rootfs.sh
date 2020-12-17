@@ -251,8 +251,8 @@ apt -y full-upgrade
 
 # local-apt-repository support
 protected_install local-apt-repository
-protected_install reprepro
-reprepro rereference
+# protected_install reprepro
+# reprepro rereference
 
 # update packages and install base
 apt update
