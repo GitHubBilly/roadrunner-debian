@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
-# Mount given Debian rootfs.
+# This script chroots to a given Debian rootfs and runs a command.
 #
 declare ROOTFS_BASE=${1:-'rootfs'}
+declare CMD=${2:-'/bin/bash'}
 
 : ${CHROOT:='/usr/sbin/chroot'}
 : ${FINDMNT:='/bin/findmnt'}
@@ -31,4 +32,4 @@ for fs in /sys /dev /dev/pts; do
     fi
 done
 
-$SUDO $CHROOT "$ROOTFS_BASE" /bin/bash
+$SUDO $CHROOT "$ROOTFS_BASE" "$CMD"
