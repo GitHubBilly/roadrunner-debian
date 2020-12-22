@@ -196,15 +196,15 @@ EOF
     pr_info "recoveryfs: prepare install packages in recoveryfs"
 
     # Run apt install without invoking daemons.
-    cat > ${RECOVERYFS_BASE}/usr/sbin/policy-rc.d << EOF
-#!/bin/sh
+    cat > ${RECOVERYFS_BASE}/usr/sbin/policy-rc.d <<EOF
+#!/bin/bash
 exit 101
 EOF
 
     chmod +x ${RECOVERYFS_BASE}/usr/sbin/policy-rc.d
 
     # third packages stage
-    cat > ${RECOVERYFS_BASE}/third-stage << EOF
+    cat > ${RECOVERYFS_BASE}/third-stage <<EOF
 #!/bin/bash
 # apply debconfig options
 echo 'LANG="${LOCALES%% *}"' >/etc/default/locale
@@ -574,7 +574,7 @@ EOF
         pr_info "recoveryfs: install user defined packages (user-stage)"
         pr_info "recoveryfs: G_USER_PACKAGES \"${G_USER_PACKAGES}\" "
 
-        cat > ${RECOVERYFS_BASE}/user-stage << EOF
+        cat > ${RECOVERYFS_BASE}/user-stage <<EOF
 #!/bin/bash
 # update packages
 apt update
@@ -664,7 +664,7 @@ EOF
     ln -s /dev/null "${RECOVERYFS_BASE}/etc/systemd/system/e2scrub_reap.service"
 
     ## post-packages command
-    cat > ${RECOVERYFS_BASE}/post-packages << EOF
+    cat > ${RECOVERYFS_BASE}/post-packages <<EOF
 #!/bin/bash
 
 # Install node via nvm
@@ -676,9 +676,9 @@ sed -i -e 's/^USE_DPKG/#USE_DPKG/' /etc/locale.nopurge
 localepurge
 
 # XXX: Why is 'linux-image*' installed???
-apt -y purge 'linux-image*' initramfs-tools{,-core} \
-    cryptsetup cryptsetup-bin cryptsetup-initramfs cryptsetup-run \
-    dmeventd dmraid dracut dracut-core lvm2 \
+apt -y purge 'linux-image*' initramfs-tools{,-core} \\
+    cryptsetup cryptsetup-bin cryptsetup-initramfs cryptsetup-run \\
+    dmeventd dmraid dracut dracut-core lvm2 \\
     thin-provisioning-tools
 
 apt -y purge build-essential gcc-8 libx11-6 manpages{,-dev}
@@ -688,9 +688,7 @@ apt -y autoremove --purge
 apt -y install apparmor{,-utils,-profiles}
 
 # Set apparamor profiles to complain mode by default.
-for f in $(find /etc/apparmor.d -maxdepth 1 -type f); do
-  aa-complain "$f"
-done
+find /etc/apparmor.d -maxdepth 1 -type f -exec aa-complain {} \\; 2>/dev/null
 
 apt clean
 

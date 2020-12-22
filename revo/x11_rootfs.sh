@@ -192,7 +192,7 @@ EOF
     pr_info "rootfs: prepare install packages in rootfs"
 
     # Run apt install without invoking daemons.
-    cat > ${ROOTFS_BASE}/usr/sbin/policy-rc.d << EOF
+    cat > ${ROOTFS_BASE}/usr/sbin/policy-rc.d <<EOF
 #!/bin/sh
 exit 101
 EOF
@@ -200,7 +200,7 @@ EOF
     chmod +x ${ROOTFS_BASE}/usr/sbin/policy-rc.d
 
     # third packages stage
-    cat > ${ROOTFS_BASE}/third-stage << EOF
+    cat > ${ROOTFS_BASE}/third-stage <<EOF
 #!/bin/bash
 # apply debconfig options
 echo 'LANG="${LOCALES%% *}"' >/etc/default/locale
@@ -573,7 +573,7 @@ EOF
         pr_info "rootfs: install user defined packages (user-stage)"
         pr_info "rootfs: G_USER_PACKAGES \"${G_USER_PACKAGES}\" "
 
-        cat > ${ROOTFS_BASE}/user-stage << EOF
+        cat > ${ROOTFS_BASE}/user-stage <<EOF
 #!/bin/bash
 # update packages
 apt update
@@ -662,7 +662,7 @@ EOF
     ln -s /dev/null "${ROOTFS_BASE}/etc/systemd/system/e2scrub_reap.service"
 
     ## post-packages command
-    cat > ${ROOTFS_BASE}/post-packages << EOF
+    cat > ${ROOTFS_BASE}/post-packages <<EOF
 #!/bin/bash
 
 # Install node via nvm
@@ -674,9 +674,9 @@ sed -i -e 's/^USE_DPKG/#USE_DPKG/' /etc/locale.nopurge
 localepurge
 
 # XXX: Why is 'linux-image*' installed???
-apt -y purge 'linux-image*' initramfs-tools{,-core} \
-    cryptsetup cryptsetup-bin cryptsetup-initramfs cryptsetup-run \
-    dmeventd dmraid dracut dracut-core lvm2 \
+apt -y purge 'linux-image*' initramfs-tools{,-core} \\
+    cryptsetup cryptsetup-bin cryptsetup-initramfs cryptsetup-run \\
+    dmeventd dmraid dracut dracut-core lvm2 \\
     thin-provisioning-tools
 
 apt -y autoremove --purge
@@ -685,9 +685,7 @@ apt -y autoremove --purge
 apt -y install apparmor{,-utils,-profiles}
 
 # Set apparamor profiles to complain mode by default.
-for f in $(find /etc/apparmor.d -maxdepth 1 -type f); do
-  aa-complain "$f"
-done
+find /etc/apparmor.d -maxdepth 1 -type f -exec aa-complain {} \\; 2>/dev/null
 
 apt clean
 
