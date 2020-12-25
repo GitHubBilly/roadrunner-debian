@@ -3,7 +3,9 @@ The following scripts are intended to simplify routine tasks and
 described in following sections:
 
 - [chrootfs.sh](#chrootfssh)
+- [firewalld](#firewalld)
 - [flash-diskimage.sh](#flash-diskimagesh)
+- [gstreamer-imx](#gstreamer-imx)
 - [markov-pwgen](#markov-pwgen)
 - [memalloc](#memalloc)
 - [mp-build-diskimage.sh](#mp-build-diskimagesh)
@@ -34,6 +36,12 @@ binary) via [QEMU](https://www.qemu.org/). Once inside the Arm VM,
 32-bit Arm binaries can be built natively - no cross-compilation
 necessary.
 
+## firewalld
+The `firewalld` package provides Red Hat's firewall.
+The script `build-firewalld-deb.sh` builds a Debian
+package for firewalld from upstream sources. It is intended to be
+run while chroot'ed to a REVO Roadrunner _rootfs_.
+
 ## flash-diskimage.sh
 The script
 [flash-diskimage.sh](https://github.com/revolution-robotics/roadrunner-debian/tree/debian_buster_rr01/contrib#flash-diskimagesh)
@@ -51,6 +59,12 @@ By default, it looks for image files to flash in the directory _${HOME}/output_.
 
 The script leverages features of GNU Bash version 5, so no attempt has
 been made to port it, e.g., to MacOS.
+
+## gstreamer-imx
+The `gstreamer-imx` package provides GStreamer plugins for i.MX
+platform. The script `build-gstreamer-imx-deb.sh` builds a Debian
+package for gstreamer-imx from upstream sources. It is intended to be
+run while chroot'ed to a REVO Roadrunner _rootfs_.
 
 ## markov-pwgen
 `markov-pwgen` is a JavaScript command-line utility that leverages
