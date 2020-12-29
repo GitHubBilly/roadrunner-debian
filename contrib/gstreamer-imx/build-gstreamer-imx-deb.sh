@@ -48,16 +48,17 @@ prepare-debian-infrastructure ()
     local debian_archive=${package}-${version}
     local original_archive=${package}_${version}.orig
 
-    mv "${version}.tar.gz" "${original_archive}.tar.gz"
+    mv "${version}.tar.gz" "${debian_archive}.tar.gz"
+    ln -s "${debian_archive}.tar.gz" "${original_archive}.tar.gz"
 
     # Extract and apply patch at the end of this script to create
     # Debian subdirectory.
     sed -n '/BEGIN debian patch/,$s/^#//p' $0 | patch -p0 -d "$debian_archive"
 
-    # Update version number in `src/debian/changelog'.
-    sed -i -e "s;^\(${package} \)(.*);\1(${version}-1);" "${debian_archive}/debian/changelog"
+    # Update first version number in `src/debian/changelog'.
+    sed -i -e "0,/^${package}/{s;^\(${package} \)(.*);\1(${version}-1);}" "${debian_archive}/debian/changelog"
+
     chmod +x "${debian_archive}/debian/"{repack-waf,rules}
-    tar -zcf "${debian_archive}.tar.gz" "$debian_archive"
 }
 
 install-build-dependencies ()

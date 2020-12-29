@@ -258,8 +258,13 @@ protected_install local-apt-repository
 apt update
 
 protected_install locales
-protected_install ntp
+
+# Use NTP-client only service, systemd-timesyncd.
+# protected_install ntp
+
 protected_install openssh-server
+
+# NFS is huge, so don't install by default.
 # protected_install nfs-common
 
 # packages required when flashing emmc
@@ -294,9 +299,28 @@ protected_install network-manager-gnome
 # net-tools (ifconfig, etc.)
 protected_install net-tools
 
+protected_install ed
+
 ## fix lightdm config (added autologin x_user) ##
-sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
-sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
+# sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
+# sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
+
+## fix lightdm config (disable default seat) ##
+sed -i -e 's/^#start-default-seat=.*/start-default-seat=false/' \\
+    -e 's/^#greeter-user=.*/greeter-user=lightdm/' \\
+    /etc/lightdm/lightdm.conf
+
+## fix lightdm config (enable XDMCP) ##
+# ed -s /etc/lightdm/lightdm.conf <<EOT
+# /^#start-default-seat=.*/s//start-default-seat=false/
+# /^#greeter-user=.*/s//greeter-user=lightdm/
+# /^#xserver-allow-tcp=.*/s//xserver-allow-tcp=true/
+# /^\\[XDMCPServer\\]/;+1,+2c
+# enabled=true
+# port=177
+# .
+# wq
+# EOT
 
 # added alsa & alsa utilites
 protected_install alsa-utils
@@ -347,6 +371,7 @@ protected_install can-utils
 protected_install pm-utils
 
 # BEGIN -- REVO i.MX7D networking and security
+protected_install nftables
 protected_install firewalld
 protected_install step-cli
 protected_install step-certificates
@@ -359,18 +384,16 @@ rm -f /etc/network/interfaces
 # on compatibility interface, iptables-nft, provided by iptables.
 # See https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall.
 # apt -y purge iptables
-DEBIAN_FRONTEND=noninteractive apt -y install iptables-persistent
-rm -f /etc/iptables/rules.v[46]
+
+# iptables-persistent is superceded by firewalld.
+# DEBIAN_FRONTEND=noninteractive apt -y install iptables-persistent
+# rm -f /etc/iptables/rules.v[46]
 
 # Defaults, starting with Debian buster:
 # update-alternatives --set iptables /usr/sbin/iptables-nft
 # update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
 # update-alternatives --set arptables /usr/sbin/arptables-nft
 # update-alternatives --set ebtables /usr/sbin/ebtables-nft
-
-# Install firewalld with nftables backend.
-apt -y install firewalld nftables
-sed -i -e 's/^\(FirewallBackend=\).*/\1nftables/' /etc/firewalld/firewalld.conf
 # END -- REVO i.MX7D networking
 
 apt -y autoremove
