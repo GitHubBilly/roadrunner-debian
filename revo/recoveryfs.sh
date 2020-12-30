@@ -244,77 +244,74 @@ protected_install ()
 # silence some apt warnings
 protected_install dialog
 
-# Replace mawk with gawk
+## Replace mawk with gawk.
 protected_install gawk
 apt -y purge mawk
 # END -- REVO i.MX7D: additions
 
-# update packages and install base
+## Update packages and install base.
 apt update
 apt -y full-upgrade
 
-# local-apt-repository support
+## Host a local disk-based Debian repository...
 protected_install local-apt-repository
+
+## To host a private web-based Debian repository...
 # protected_install reprepro
 # reprepro rereference
 
-# update packages and install base
-apt update
-
 protected_install locales
 
-# Use NTP-client only service, systemd-timesyncd.
+## Use NTP-client only service, systemd-timesyncd.
 # protected_install ntp
 
 protected_install openssh-server
 
-# NFS is huge, so don't install by default.
+## NFS is huge, so don't install by default.
 # protected_install nfs-common
 
-# packages required when flashing emmc
+## Packages required when flashing eMMC...
 protected_install dosfstools
 
-# fix config for sshd (permit root login)
+## Fix config for sshd (permit root login).
 sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
 
-# rng-tools
+## Hardware-based random-number generation daemon.
 protected_install rng-tools
 
-# udisk2
+## udisk2
 protected_install udisks2
 
-# gvfs
+## gvfs
 # protected_install gvfs
 
-# gvfs-daemons
+## gvfs-daemons
 # protected_install gvfs-daemons
 
-# net-tools (ifconfig, etc.)
+## Legacy network tools (ifconfig, etc.)
 # protected_install net-tools
 
-# enable graphical desktop
+## Enable graphical desktop.
 # protected_install xorg
 # protected_install xfce4
 # protected_install xfce4-goodies
 
-# network manager
+## Network Manager.
 # protected_install network-manager-gnome
 
-# net-tools (ifconfig, etc.)
-# protected_install net-tools
-
+## Legacy scripting editor.
 protected_install ed
 
-## fix lightdm config (added autologin x_user) ##
+## Fix lightdm config (added autologin x_user).
 # sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
 # sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
 
-## fix lightdm config (disable default seat) ##
+## Fix lightdm config (disable default seat).
 sed -i -e 's/^#start-default-seat=.*/start-default-seat=false/' \\
     -e 's/^#greeter-user=.*/greeter-user=lightdm/' \\
     /etc/lightdm/lightdm.conf
 
-## fix lightdm config (enable XDMCP) ##
+## Fix lightdm config (enable XDMCP).
 # ed -s /etc/lightdm/lightdm.conf <<EOT
 # /^#start-default-seat=.*/s//start-default-seat=false/
 # /^#greeter-user=.*/s//greeter-user=lightdm/
@@ -326,7 +323,7 @@ sed -i -e 's/^#start-default-seat=.*/start-default-seat=false/' \\
 # wq
 # EOT
 
-# added alsa & alsa utilites
+## Add ALSA & ALSA utilites.
 # protected_install alsa-utils
 # protected_install gstreamer1.0-alsa
 
@@ -336,42 +333,42 @@ sed -i -e 's/^#start-default-seat=.*/start-default-seat=false/' \\
 # protected_install gstreamer1.0-plugins-good
 # protected_install gstreamer1.0-tools
 
-# added gstreamer-imx
+## Add gstreamer-imx.
 # protected_install gstreamer-imx
 
-# added i2c tools
+## Add i2c tools.
 protected_install i2c-tools
 
-# added usb tools
+## Add usb tools.
 protected_install usbutils
 
-# added net tools
+## Add network bandwidth metrics.
 # protected_install iperf
 
-# mtd
+## Add flash file system utilities.
 # protected_install mtd-utils
 
-# bluetooth
+## Add bluetooth support.
 protected_install bluetooth
 # protected_install bluez-obexd
 # protected_install bluez-tools
 # protected_install blueman
 # protected_install gconf2
 
-# shared-mime-info
+## shared-mime-info
 # protected_install shared-mime-info
 
-# wifi support packages
+## Add WiFi support packages.
 # protected_install hostapd
 # protected_install udhcpd
 
-# disable the hostapd service by default
+## Disable hostapd service by default.
 # systemctl disable hostapd.service
 
-# can support
+## Add Controller Area Network (CAN) support.
 protected_install can-utils
 
-# pm-utils
+## Add power management utilities.
 # protected_install pm-utils
 
 # BEGIN -- REVO i.MX7D networking and security
@@ -380,22 +377,22 @@ protected_install firewalld
 # protected_install step-cli
 # protected_install step-certificates
 
-# ifupdown is superceded by NetworkManager
+## ifupdown is superceded by NetworkManager...
 apt -y purge ifupdown
 rm -f /etc/network/interfaces
 
 printf "\n\n" | DEBIAN_FRONTEND=noninteractive apt -y install network-manager
 
-# iptables is superceded by nftables, but NetworkManager still depends
-# on compatibility interface, iptables-nft, provided by iptables.
-# See https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall.
+## iptables is superceded by nftables, but NetworkManager still depends
+## on compatibility interface, iptables-nft, provided by iptables.
+## See https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall.
 # apt -y purge iptables
 
-# iptables-persistent is superceded by firewalld.
+## iptables-persistent is superceded by firewalld.
 # DEBIAN_FRONTEND=noninteractive apt -y install iptables-persistent
 # rm -f /etc/iptables/rules.v[46]
 
-# Defaults, starting with Debian buster:
+## Defaults, starting with Debian buster:
 # update-alternatives --set iptables /usr/sbin/iptables-nft
 # update-alternatives --set ip6tables /usr/sbin/ip6tables-nft
 # update-alternatives --set arptables /usr/sbin/arptables-nft
