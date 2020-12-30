@@ -369,6 +369,10 @@ protected_install pm-utils
 
 # BEGIN -- REVO i.MX7D networking and security
 protected_install nftables
+
+## Remove entries from nftables.conf which might interfere with firewalld.
+echo '#!/usr/sbin/nft -f' >/etc/nftables.conf
+
 protected_install firewalld
 protected_install step-cli
 protected_install step-certificates

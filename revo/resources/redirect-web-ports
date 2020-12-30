@@ -4,7 +4,7 @@
 #
 # Copyright © 2020, Revolution Robotics, Inc.
 #
-# This script is a nftables front-end for redirecting web ports.
+# This script is a nftables front-end for IPv4 redirection of web ports.
 #
 # Rules are added to and/or removed from the nat table PREROUTING
 # chain. The resulting table is updated in nftables config file.
@@ -58,7 +58,7 @@ get_handle ()
     local from_port=$1
     local to_port=$2
 
-    $SUDO $NFT -a list table ip $REDIRECT_TABLE 2>/dev/null |
+    $SUDO $NFT -a list chain ip $REDIRECT_TABLE $REDIRECT_CHAIN 2>/dev/null |
         $AWK '/tcp dport '"$from_port"' redirect to :'"$to_port"'/ { print $NF }'
 }
 
@@ -70,12 +70,12 @@ enable_redirect ()
 
     # Before adding a rule, ensure that the containing table and chain exist.
     $SUDO $NFT add table ip $REDIRECT_TABLE
-    $SUDO $NFT add chain $REDIRECT_TABLE $REDIRECT_CHAIN \
-        { type nat hook prerouting priority dstnat\; policy accept\; }
+    $SUDO $NFT add chain ip $REDIRECT_TABLE $REDIRECT_CHAIN \
+        '{ type nat hook prerouting priority dstnat; policy accept; }'
 
     for key in "${!ports[@]}"; do
         if test ."${ports[$key]}" != .''; then
-            $SUDO $NFT add rule $REDIRECT_TABLE $REDIRECT_CHAIN meta l4proto tcp tcp dport "$key" redirect to ":${ports[$key]}"
+            $SUDO $NFT add rule ip $REDIRECT_TABLE $REDIRECT_CHAIN meta l4proto tcp tcp dport "$key" redirect to ":${ports[$key]}"
         fi
     done
 }
@@ -91,7 +91,7 @@ disable_redirect ()
         if test ."${ports[$key]}" != .''; then
             handle=$(get_handle "$key" "${ports[$key]}")
             if test ."$handle" != .''; then
-                $NFT delete rule ip $REDIRECT_TABLE $REDIRECT_CHAIN handle $handle
+                $SUDO $NFT delete rule ip $REDIRECT_TABLE $REDIRECT_CHAIN handle "$handle"
             fi
         fi
     done
@@ -108,22 +108,20 @@ status_of_redirect ()
 
 update_nftable ()
 {
-    local table_name=$1
-
-    $SUDO $SED -i -e "/^table $table_name/,/^}$/d" $NFTABLES_CONF
-    $SUDO $NFT list table "ip $REDIRECT_TABLE" |
+    $SUDO $SED -i -e "/^table ip $REDIRECT_TABLE/,/^}$/d" $NFTABLES_CONF
+    $SUDO $NFT list chain ip $REDIRECT_TABLE $REDIRECT_CHAIN |
         $SUDO $TEE -a $NFTABLES_CONF >/dev/null
 }
 
 if test ."$0" = ."${BASH_SOURCE[0]}"; then
 
     declare request=$1
-    declare -A user_redirect=( [80]=${2:-"$( (( $# > 1 )) && true || echo "$REDIRECT_TO_DEFAULT" )"} )
-    user_redirect+=( [443]=${3:-"$( (( $# > 2 )) && true || echo "$REDIRECT_TO_DEFAULT" )"} )
+    declare -A user_redirect=( [80]=${2:-"$( (( $# > 1 )) && true || echo $REDIRECT_TO_DEFAULT )"} )
+    user_redirect+=( [443]=${3:-"$( (( $# > 2 )) && true || echo $REDIRECT_TO_DEFAULT )"} )
 
     declare -A auto_redirect=( [80]=80 [443]=443 )
     declare existing_redirects=$(
-        $SUDO $NFT list table ip $REDIRECT_TABLE 2>/dev/null |
+        $SUDO $NFT list chain ip $REDIRECT_TABLE $REDIRECT_CHAIN 2>/dev/null |
             $AWK '/tcp dport (80|443) redirect to/ { sub(/^:/, "", $NF); printf("[%d]=%d\n", $3, $NF) }')
 
     eval auto_redirect+=( $existing_redirects )
@@ -142,27 +140,27 @@ if test ."$0" = ."${BASH_SOURCE[0]}"; then
     done
 
     # $request = status
-    if [[ ."$request" =~ \.-{0,2}([sS]) ]]; then
+    if [[ ."${request,,}" =~ \.-{0,2}(s) ]]; then
         status_of_redirect
 
-        # $request = enable (synonyms: 1, Add, Yes, True)
-    elif [[ ."$request" =~ \.-{0,2}(1|[a|A]|[yY]|[tT]|[eE]) ]]; then
+    # $request = enable (synonyms: 1, Add, Yes, True)
+    elif [[ ."${request,,}" =~ \.-{0,2}(1|a|y|t|e) ]]; then
 
         # First, remove any existing redirects...
         disable_redirect auto_redirect
         enable_redirect user_redirect
-        update_nftable "ip $REDIRECT_TABLE"
+        update_nftable
 
-        # $request = disable (synonyms: 0, Remove, No, False)
-    elif [[ ."$request" =~ \.-{0,2}(0|[rR]|[nN]|[fF]|[dD]) ]]; then
+    # $request = disable (synonyms: 0, Remove, No, False)
+    elif [[ ."${request,,}" =~ \.-{0,2}(0|r|n|f|d) ]]; then
         if (( $# > 1 )); then
             disable_redirect user_redirect
         else
             disable_redirect auto_redirect
         fi
-        update_nftable "ip $REDIRECT_TABLE"
+        update_nftable
 
-        # $request = unknown
+    # $request = unknown
     else
         usage
     fi
