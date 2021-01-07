@@ -135,8 +135,10 @@ uses that if it's bootable.
 jumpered and SD otherwise. In future builds, this may be reversed.
 
 ## Subsequent builds
-After editing kernel sources, a new disk image can be created without
-re-running Debian bootstrap as follows:
+After commiting changes to the kernel or U-Boot source trees, to
+incorporate the changes into new builds, update the file
+*${G_VENDOR_PATH}/${MACHINE}/${MACHINE}.sh*. Then a new disk image can
+be created without re-running Debian bootstrap as follows:
 
 ```shell
 sudo MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -c kernel
@@ -151,7 +153,3 @@ Likewise, after editing U-Boot sources, create a new disk image with:
 sudo MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -c bootloader
 sudo MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -c diskimage
 ```
-
-After commiting changes to the kernel or U-Boot source trees, to
-incorporate the changes into new builds, update
-the file *${G_VENDOR_PATH}/${MACHINE}/${MACHINE}.sh*.
