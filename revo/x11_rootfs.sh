@@ -245,16 +245,16 @@ protected_install gawk
 apt -y purge mawk
 # END -- REVO i.MX7D: additions
 
-## Update packages and install base.
-apt update
-apt -y full-upgrade
-
 ## Host a local disk-based Debian repository...
 protected_install local-apt-repository
 
 ## To host a private web-based Debian repository...
 # protected_install reprepro
 # reprepro rereference
+
+## Update packages and install base.
+apt update
+apt -y full-upgrade
 
 protected_install locales
 
