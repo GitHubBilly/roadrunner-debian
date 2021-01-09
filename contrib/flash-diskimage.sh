@@ -7,7 +7,7 @@
 declare -r SCRIPT_NAME=${0##*/}
 
 declare -r LOOP_MAJOR=7
-declare COMPRESSION_SUFFIX=gz
+declare COMPRESSION_SUFFIX='{bz2,gz,img,lz,lzma,lzo,xz,zip}'
 declare ZCAT='gzip -dc'
 
 declare PARAM_DEBUG=0
@@ -93,8 +93,9 @@ get-disk-images ()
     local archive
     local kind
 
-    mapfile -t archives < <(ls "${PARAM_OUTPUT_DIR}/"*.$COMPRESSION_SUFFIX 2>/dev/null)
+    mapfile -t archives < <(eval ls "${PARAM_OUTPUT_DIR}/"*.$COMPRESSION_SUFFIX 2>/dev/null)
     for archive in "${archives[@]}"; do
+        get-decompressor "$archive"
         case $($ZCAT "$archive" | file -) in
             *DOS/MBR*)
                 echo "$archive"
@@ -227,7 +228,9 @@ select-media ()
 
 get-decompressor ()
 {
-    case $(file "$PARAM_DISK_IMAGE") in
+    local archive=$1
+
+    case $(file "$archive") in
         *bzip2*)
             ZCAT='bzip2 -dc'
             ;;
@@ -245,6 +248,9 @@ get-decompressor ()
             ;;
         *XZ*)
             ZCAT='xz -dc'
+            ;;
+        *Zip*)
+            ZCAT='unzip -p'
             ;;
         *'ISO 9660'*|*'DOS/MBR boot sector'*)
             ZCAT=cat
@@ -355,6 +361,6 @@ if test ."$PARAM_DEBUG" = .'1'; then
 fi
 
 select-media
-get-decompressor
+get-decompressor "$PARAM_DISK_IMAGE"
 flash-diskimage
 verify-diskimage
