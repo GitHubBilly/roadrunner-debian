@@ -30,7 +30,7 @@ shopt -s extglob
 
 # Edit these ...
 : ${VMNAME:='roadrunner'}
-: ${NCPUS:='2'}
+: ${NPROC:='2'}
 : ${DISK_SIZE:='30G'}
 : ${MEMORY_SIZE:='2G'}
 : ${SSH_PUBKEY:="${HOME}/.ssh/id_rsa.pub"}
@@ -198,13 +198,13 @@ if "$MULTIPASS" list  | $AWK 'NR > 1 { print $1 }' | $GREP -q "$VMNAME"; then
         "$MULTIPASS" umount "$VMNAME"
         "$MULTIPASS" stop "$VMNAME"
         "$MULTIPASS" delete --purge "$VMNAME"
-        "$MULTIPASS" launch --cpus "$NCPUS" --disk "$DISK_SIZE" \
+        "$MULTIPASS" launch --cpus "$NPROC" --disk "$DISK_SIZE" \
                      --mem "$MEMORY_SIZE" --name "$VMNAME" focal
     fi
 
 # Launch VM and mount local $DEST_DIR on VM's $OUTPUT_DIR via SSHFS.
 else
-    "$MULTIPASS" launch --cpus "$NCPUS" --disk "$DISK_SIZE" \
+    "$MULTIPASS" launch --cpus "$NPROC" --disk "$DISK_SIZE" \
                  --mem "$MEMORY_SIZE" --name "$VMNAME" focal
 fi
 
@@ -301,7 +301,7 @@ fi
 echo "Deploying sources..."
 MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -c deploy |& $TEE "/home/ubuntu/${OUTPUT_DIR}/deploy.log"
 echo "Building all..."
-$SUDO MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -j "$NCPUS" $DEBIAN_PROXY -c all |& $TEE "/home/ubuntu/${OUTPUT_DIR}/all.log"
+$SUDO MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -j "$NPROC" $DEBIAN_PROXY -c all |& $TEE "/home/ubuntu/${OUTPUT_DIR}/all.log"
 echo "Creating disk image..."
 echo | $SUDO MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -c diskimage |& $TEE "/home/ubuntu/${OUTPUT_DIR}/diskimage.log"
 echo | $SUDO MACHINE=revo-roadrunner-mx7 ./revo_make_debian.sh -c usbimage |& $TEE "/home/ubuntu/${OUTPUT_DIR}/usbimage.log"
