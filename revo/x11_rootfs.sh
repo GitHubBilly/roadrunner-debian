@@ -346,8 +346,12 @@ protected_install mtd-utils
 
 ## Add bluetooth support.
 protected_install bluetooth
-protected_install bluez-obexd
 protected_install bluez-tools
+protected_install bluez-obexd
+
+sed -i -e '/^ExecStart/s/$/ --noplugin=sap/' \\
+    /lib/systemd/system/bluetooth.service
+
 protected_install blueman
 protected_install gconf2
 

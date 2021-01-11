@@ -58,7 +58,7 @@ declare -r G_CROSS_COMPILER_64BIT_PREFIX=aarch64-buildroot-linux-gnu-
 # declare -r G_CROSS_COMPILER_32BIT_PREFIX=arm-buildroot-linux-gnueabihf-
 declare -r G_CROSS_COMPILER_32BIT_PREFIX=arm-linux-gnueabihf-
 
-declare G_CROSS_COMPILER_JOPTION="-j 2"
+declare G_CROSS_COMPILER_JOPTION="-j $(nproc)"
 
 #### user rootfs/recoveryfs packages ####
 declare -r G_USER_PACKAGES="avahi-daemon bash-completion bc binutils cockpit cockpit-networkmanager curl dnsutils git jq libsystemd-dev openvpn network-manager-openvpn pciutils python3-asteval python3-cryptography python3-dateutil python3-lxml python3-pip python3-psutil python3-serial python3-websocket python3-websockets python3-zmq sudo traceroute wireguard-tools zram-tools"
