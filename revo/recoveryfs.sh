@@ -514,15 +514,22 @@ EOF
        "${RECOVERYFS_BASE}/etc/systemd/system/dbus-org.freedesktop.nm-dispatcher.service"
 
     # Fix NetworkManager dispatch permissions set by Git
-    chmod -R g-w "${G_VENDOR_PATH}/NetworkManager/"*
-    chmod 750 "${G_VENDOR_PATH}/NetworkManager/etc/NetworkManager/dispatcher.d/30-link-led"
+    chmod -R g-w "${G_VENDOR_PATH}/resources/NetworkManager/"*
+    chmod 750 "${G_VENDOR_PATH}/resources/NetworkManager/etc/NetworkManager/dispatcher.d/30-link-led"
 
     # Install NetworkManager scripts
-    tar -C "${G_VENDOR_PATH}/NetworkManager" -cf - . |
+    tar -C "${G_VENDOR_PATH}/resources/NetworkManager" -cf - . |
         tar -C "${RECOVERYFS_BASE}" -oxf -
 
     rm -f "${RECOVERYFS_BASE}/etc/NetworkManager/dispatcher.d/"*ifupdown
 
+    # Update NetworkManager udev rule.
+    install -m 0644 "${G_VENDOR_PATH}/resources/udev/84-nm-drivers.rules" \
+            "${RECOVERYFS_BASE}/usr/lib/udev/rules.d"
+
+    # Add default firewalld configuration.
+    install -m 0644 "${G_VENDOR_PATH}/resources/firewalld/public.xml" \
+            "${RECOVERYFS_BASE}/etc/firewalld/zones"
     # END -- REVO i.MX7D update
 
     # install variscite-bt service
