@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * @(#) markov-pwgen.js
+ * @(#) markov-pwgen
  *
  * Copyright © 2020, Revolution Robotics, Inc.
  *
@@ -15,9 +15,9 @@ if (argv.help || argv.h) {
     console.log(`Usage: ${pgm} OPTIONS`);
     console.log(`OPTIONS (defaults are random within the given range):
   --count=N         Generate N hyphen-delimited passwords (default: 2)
-  --order=N         Specify Markov chain order (default: 3 or 4)
-  --minLength=N     Minimum password length (default: 3 or 4)
-  --maxLength=N     Maximum password length (default: 6 or 7)
+  --order=N         Specify Markov chain order (default: rand(3, 4)
+  --minLength=N     Minimum password length (default: rand(4, 6)
+  --maxLength=N     Maximum password length (default: rand(7, 9)
   --maxAttempts=N   Fail after N attempts to generate chain (default: 100)
   --allowDuplicates Allow dictionary passwords (default: false)`);
     process.exit(0);

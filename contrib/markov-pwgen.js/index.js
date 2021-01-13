@@ -1,11 +1,21 @@
 import MarkovChain from 'foswig';
 import { dict } from './dictionary.js';
 
+function rand(min, max) {
+    if (max == undefined) {
+        max = min;
+        min = 0;
+    } else {
+        max += 1;
+    }
+    return Math.floor(Math.random() * (max - min) + min);
+}
+
 function genMarkovPass({
     count = 2,
-    order = Math.random() < 0.5 ? 3 : 4,
-    minLength = Math.random() < 0.5 ? 3 : 4,
-    maxLength = Math.random() < 0.5 ? 6 : 7,
+    order = rand(3, 4),
+    minLength = rand(4, 6),
+    maxLength = rand(7, 9),
     maxAttempts = 100,
     allowDuplicates = false,
 } = {}) {

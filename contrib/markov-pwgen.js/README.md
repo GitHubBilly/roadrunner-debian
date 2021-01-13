@@ -19,11 +19,19 @@ OPTIONS (defaults are random within the given range):
 
 ## Installation
 
-Select a plain-text dictionary of words - one per line, say
-_/usr/share/dict/web2_, and run:
-
-
+To install from the web, run on the command line:
 ```
-make DICT=/usr/share/dict/web2
-sudo make install
+npm install -g  markov-pwgen
+```
+
+To install from source, if GNU `make` and the JSON parser `jq` are
+available, run:
+```
+make install
+```
+
+Otherwise, run:
+```
+npm pack .
+npm install -g *.tgz
 ```

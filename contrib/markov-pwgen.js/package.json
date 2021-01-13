@@ -6,6 +6,9 @@
         "foswig": "~3.0.1",
         "minimist": "^1.2.5"
     },
+    "scripts": {
+        "preinstall": "test -f dictionary.js || ./scripts/filter-wordlist.py"
+    },
     "type": "module",
     "main": "index.js",
     "bin": {
@@ -16,6 +19,12 @@
         "url": "https://github.com/revolution-robotics/roadrunner-debian",
         "directory": "contrib/markov-pwgen"
     },
+    "keywords": [
+        "markov",
+        "chain",
+        "password",
+        "generator"
+    ],
     "author": "Andrew L. Moore",
     "license": "MIT"
 }
