@@ -207,7 +207,7 @@ EOF
     cat > ${RECOVERYFS_BASE}/third-stage <<EOF
 #!/bin/bash
 # apply debconfig options
-echo 'LANG="${LOCALES%% *}"' >/etc/default/locale
+echo 'LANG=${LOCALES%% *}' >/etc/default/locale
 dpkg-reconfigure --frontend=noninteractive locales
 debconf-set-selections /debconf.set
 rm -f /debconf.set
