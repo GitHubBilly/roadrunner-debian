@@ -1,0 +1,7 @@
+[Unit]
+Description=Process changes to /boot/cmdline.txt
+Documentation=https://github.com/revolution-robotics/roadrunner-debian
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/update-kernel-cmdline

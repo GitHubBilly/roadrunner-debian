@@ -492,6 +492,31 @@ EOF
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/journald.conf" \
             "${RECOVERYFS_BASE}/etc/systemd"
 
+    # Install U-Boot boot script.
+    install -d -m 0755 "${RECOVERYFS_BASE}/usr/share/boot"
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/u-boot/boot.sh" \
+                "${RECOVERYFS_BASE}/usr/share/boot"
+
+    # Install support for /boot/cmdline.txt
+    case "${ACCESS_CONTROL,,}" in
+        apparmor)
+            echo 'security=apparmor apparmor=1' \
+                 >"${RECOVERYFS_BASE}/boot/cmdline.txt"
+            ;;
+        selinux)
+            echo 'security=selinux selinux=1 enforcing=0' \
+                 >"${RECOVERYFS_BASE}/boot/cmdline.txt"
+            ;;
+        unix|*)
+            ;;
+    esac
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/update-kernel-cmdline" \
+            "${RECOVERYFS_BASE}/usr/sbin"
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/kernel-cmdline".{path,service} \
+            "${RECOVERYFS_BASE}/lib/systemd/system"
+    ln -s '/lib/systemd/system/kernel-cmdline.path' \
+       "${RECOVERYFS_BASE}/etc/systemd/system/multi-user.target.wants"
+
     # Install recover-emmc service.
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/recover-emmc.service" \
             "${RECOVERYFS_BASE}/lib/systemd/system"
@@ -799,13 +824,15 @@ prepare_recovery_ubifs_recoveryfs ()
 # make bootable image for device
 # $1 -- block device
 # $2 -- output images dir
+# $3 -- recoveryfs tarball
 make_recovery_image ()
 {
     local LPARAM_BLOCK_DEVICE=$1
     local LPARAM_OUTPUT_DIR=$2
+    local LPARAM_TARBALL=$3
 
-    local P1_MOUNT_DIR="${G_TMP_DIR}/p1"
-    local P2_MOUNT_DIR="${G_TMP_DIR}/p2"
+    local P1_MOUNT_DIR=${G_TMP_DIR}/p1
+    local P2_MOUNT_DIR=${G_TMP_DIR}/p2
 
     local BOOTLOAD_RESERVE_SIZE=4
     local SPARE_SIZE=8
@@ -827,15 +854,32 @@ make_recovery_image ()
 
     flash_device ()
     {
-        pr_info "Flashing \"BOOT\" partition"
-        if test -f "${P1_MOUNT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
-            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
-                    "$P1_MOUNT_DIR"
+        local cmdline
 
-            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
-            install -m 0644 "${P1_MOUNT_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
-                    "${P1_MOUNT_DIR}/${UBOOT_SCRIPT}"
-            echo "${ACCESS_CONTROL,,}" >"${P1_MOUNT_DIR}/access-control"
+        pr_info "Flashing \"${LPARAM_TARBALL%%.*}\" partition"
+        if ! tar -C "$P2_MOUNT_DIR" -zxpf "${LPARAM_OUTPUT_DIR}/${LPARAM_TARBALL}"; then
+            pr_error "Flash did not complete successfully."
+            echo "*** Please check media and try again! ***"
+            return 1
+        fi
+
+        if test -f "${P2_MOUNT_DIR}/boot/cmdline.txt"; then
+
+            pr_info "Building U-Boot script"
+            cmdline=$(
+                sed -n -e '/^[[:space:]]*#/d' \
+                    -e '/^[[:space:]]*$/d' \
+                    -e '/[[:alnum:]]/{s/^[[:space:]]*//;p;q}' \
+                    "$P2_MOUNT_DIR/boot/cmdline.txt"
+                   )
+            sed -e "/^setenv kernelargs/s;\$; ${cmdline};" \
+                "${P2_MOUNT_DIR}/usr/share/boot/boot.sh" >"${G_TMP_DIR}/boot.sh"
+            make -C "$G_TMP_DIR" -f "${P2_MOUNT_DIR}/usr/share/boot/Makefile"
+        fi
+
+        pr_info "Flashing \"BOOT\" partition"
+        if test -f "${G_TMP_DIR}/boot.scr"; then
+            install -m 0644 "${G_TMP_DIR}/boot.scr" "$P1_MOUNT_DIR"
         elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
             install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
                     "$P1_MOUNT_DIR"
@@ -844,13 +888,6 @@ make_recovery_image ()
         install -m 0644 "${LPARAM_OUTPUT_DIR}/${BUILD_IMAGE_TYPE}" \
                 "$P1_MOUNT_DIR"
         sync
-
-        pr_info "Flashing \"recoveryfs\" partition"
-        if ! tar -C "$P2_MOUNT_DIR" -xpf "${LPARAM_OUTPUT_DIR}/${DEF_RECOVERYFS_TARBALL_NAME}"; then
-            pr_error "Flash did not complete successfully."
-            echo "*** Please check media and try again! ***"
-            return 1
-        fi
     }
 
     copy_debian_images ()
@@ -858,14 +895,9 @@ make_recovery_image ()
         mkdir -p "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
 
         pr_info "Copying Debian images to /${G_IMAGES_DIR}"
-        if test -f "${LPARAM_OUTPUT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
-            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
+        if test -f "${G_TMP_DIR}/boot.scr"; then
+            install -m 0644 "${G_TMP_DIR}/boot.scr" \
                     "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
-
-            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
-            install -m 0644 "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
-                    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/${UBOOT_SCRIPT}"
-            echo "${ACCESS_CONTROL,,}" >"${P2_MOUNT_DIR}/${G_IMAGES_DIR}/access-control"
         elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
             install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
                     "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# @(#) update-kernel-cmdline
+#
+# Copyright © 2021 Revolution Robotics, Inc.
+#
+# This script updates the kernel command-line from the contents of
+# /boot/cmdline.txt.
+#
+: ${AWK:='/usr/bin/awk'}
+: ${FINDMNT:='/bin/findmnt'}
+: ${FLOCK:='/usr/bin/flock'}
+: ${INSTALL:='/usr/bin/install'}
+: ${MAKE:='/usr/bin/make'}
+: ${MKIMAGE:='/usr/bin/mkimage'}
+: ${MKTEMP:='/usr/bin/mktemp'}
+: ${MOUNT:='/bin/mount'}
+: ${RM:='/bin/rm'}
+: ${SED:='/bin/sed'}
+: ${SUDO:='/usr/bin/sudo'}
+: ${UMOUNT:='/bin/umount'}
+
+: ${LOCKED:=''}
+
+declare script_name=${0##*/}
+
+if test -x "$FLOCK" -a ."$0" != ."$LOCKED"; then
+
+    #  Avoid running multiple instances of this script.
+    exec env LOCKED=$0 $FLOCK -en "$0" "$0" "$@" || true
+fi
+
+process-cmdline ()
+{
+    local mountdir=$1
+    local tmpdir=$2
+
+    local cmdline=$(
+        $SED -n -e '/^[[:space:]]*#/d' \
+            -e '/^[[:space:]]*$/d' \
+            -e '/[[:alnum:]]/{s/^[[:space:]]*//;p;q}' \
+            "/boot/cmdline.txt"
+            )
+
+    $SED -e "/^setenv kernelargs/s;\$; ${cmdline};" \
+        "/usr/share/boot/boot.sh" >"${tmpdir}/boot.sh"
+    $MAKE -C "$tmpdir" -f "/usr/share/boot/Makefile"
+
+    if test -f "${tmpdir}/boot.scr"; then
+        local boot_device=$(
+            $FINDMNT -n / |
+                $AWK '{ sub(/p[0-9]$/, "p1", $2); print $2 }'
+                )
+        $MOUNT "$boot_device" "$mountdir"
+        $SUDO $INSTALL -m 0644 "${tmpdir}/boot.scr" "$mountdir"
+    fi
+}
+
+clean-up ()
+{
+    local mountdir=$1
+    local tmpdir=$2
+
+    if $FINDMNT -n "$mountdir" >/dev/null; then
+       $UMOUNT -f "$mountdir"
+    fi
+    if test -d "$tmpdir"; then
+        $RM -rf "$tmpdir"
+    fi
+}
+
+declare mountdir=/mnt
+declare tmpdir=$(mktemp -d "/tmp/${script_name}.XXXXX")
+
+trap 'clean-up "$mountdir" "$tmpdir"; exit' 0  1 2 15
+
+process-cmdline "$mountdir" "$tmpdir"

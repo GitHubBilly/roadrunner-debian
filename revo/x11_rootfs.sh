@@ -490,6 +490,31 @@ EOF
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/journald.conf" \
             "${ROOTFS_BASE}/etc/systemd"
 
+    # Install U-Boot boot script.
+    install -d -m 0755 "${ROOTFS_BASE}/usr/share/boot"
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/u-boot/"{Makefile,boot.sh} \
+                "${ROOTFS_BASE}/usr/share/boot"
+
+    # Install support for /boot/cmdline.txt
+    case "${ACCESS_CONTROL,,}" in
+        apparmor)
+            echo 'security=apparmor apparmor=1' \
+                 >"${ROOTFS_BASE}/boot/cmdline.txt"
+            ;;
+        selinux)
+            echo 'security=selinux selinux=1 enforcing=0' \
+                 >"${ROOTFS_BASE}/boot/cmdline.txt"
+            ;;
+        unix|*)
+            ;;
+    esac
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/update-kernel-cmdline" \
+            "${ROOTFS_BASE}/usr/sbin"
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/kernel-cmdline".{path,service} \
+            "${ROOTFS_BASE}/lib/systemd/system"
+    ln -s '/lib/systemd/system/kernel-cmdline.path' \
+       "${ROOTFS_BASE}/etc/systemd/system/multi-user.target.wants"
+
     # Install flash-emmc service.
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/flash-emmc.service" \
             "${ROOTFS_BASE}/lib/systemd/system"
@@ -801,6 +826,7 @@ prepare_x11_ubifs_rootfs ()
 # make bootable image for device
 # $1 -- block device
 # $2 -- output images dir
+# $3 -- rootfs tarball
 make_x11_image ()
 {
     local LPARAM_BLOCK_DEVICE=$1
@@ -830,6 +856,29 @@ make_x11_image ()
 
     flash_device ()
     {
+        local cmdline
+
+        pr_info "Flashing \"${LPARAM_TARBALL%%.*}\" partition"
+        if ! tar -C "$P2_MOUNT_DIR" -zxpf "${LPARAM_OUTPUT_DIR}/${LPARAM_TARBALL}"; then
+            pr_error "Flash did not complete successfully."
+            echo "*** Please check media and try again! ***"
+            return 1
+        fi
+
+        if test -f "${P2_MOUNT_DIR}/boot/cmdline.txt"; then
+
+            pr_info "Building U-Boot script"
+            cmdline=$(
+                sed -n -e '/^[[:space:]]*#/d' \
+                    -e '/^[[:space:]]*$/d' \
+                    -e '/[[:alnum:]]/{s/^[[:space:]]*//;p;q}' \
+                    "$P2_MOUNT_DIR/boot/cmdline.txt"
+                   )
+            sed -e "/^setenv kernelargs/s;\$; ${cmdline};" \
+                "${P2_MOUNT_DIR}/usr/share/boot/boot.sh" >"${G_TMP_DIR}/boot.sh"
+            make -C "$G_TMP_DIR" -f "${P2_MOUNT_DIR}/usr/share/boot/Makefile"
+        fi
+
         pr_info "Flashing \"BOOT\" partition"
         if test ."${LPARAM_TARBALL%%.*}" = .'provisionfs'; then
             if test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_PROVISION_SCRIPT}"; then
@@ -837,14 +886,8 @@ make_x11_image ()
                 install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_PROVISION_SCRIPT}" \
                         "${P1_MOUNT_DIR}/${UBOOT_SCRIPT}"
             fi
-        elif test -f "${LPARAM_OUTPUT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
-            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
-                    "$P1_MOUNT_DIR"
-
-            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
-            install -m 0644 "${P1_MOUNT_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
-                    "${P1_MOUNT_DIR}/${UBOOT_SCRIPT}"
-            echo "${ACCESS_CONTROL,,}" >"${P1_MOUNT_DIR}/access-control"
+        elif test -f "${G_TMP_DIR}/boot.scr"; then
+            install -m 0644 "${G_TMP_DIR}/boot.scr" "$P1_MOUNT_DIR"
         elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
             install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
                     "$P1_MOUNT_DIR"
@@ -853,13 +896,6 @@ make_x11_image ()
         install -m 0644 "${LPARAM_OUTPUT_DIR}/${BUILD_IMAGE_TYPE}" \
                 "$P1_MOUNT_DIR"
         sync
-
-        pr_info "Flashing \"${LPARAM_TARBALL%%.*}\" partition"
-        if ! tar -C "$P2_MOUNT_DIR" -zxpf "${LPARAM_OUTPUT_DIR}/${LPARAM_TARBALL}"; then
-            pr_error "Flash did not complete successfully."
-            echo "*** Please check media and try again! ***"
-            return 1
-        fi
     }
 
     copy_debian_images ()
@@ -867,14 +903,9 @@ make_x11_image ()
         mkdir -p "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
 
         pr_info "Copying Debian images to /${G_IMAGES_DIR}"
-        if test -f "${LPARAM_OUTPUT_DIR}/boot-${ACCESS_CONTROL,,}.scr"; then
-            install -m 0644 "${LPARAM_OUTPUT_DIR}/boot-"*.scr \
+        if test -f "${G_TMP_DIR}/boot.scr"; then
+            install -m 0644 "${G_TMP_DIR}/boot.scr" \
                     "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"
-
-            pr_info "boot-${ACCESS_CONTROL,,}.scr => ${UBOOT_SCRIPT}"
-            install -m 0644 "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/boot-${ACCESS_CONTROL,,}.scr" \
-                    "${P2_MOUNT_DIR}/${G_IMAGES_DIR}/${UBOOT_SCRIPT}"
-            echo "${ACCESS_CONTROL,,}" >"${P2_MOUNT_DIR}/${G_IMAGES_DIR}/access-control"
         elif test -f "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}"; then
             install -m 0644 "${LPARAM_OUTPUT_DIR}/${UBOOT_SCRIPT}" \
                     "${P2_MOUNT_DIR}/${G_IMAGES_DIR}"

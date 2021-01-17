@@ -2,7 +2,7 @@
 #
 # @(#) flash-emmc
 #
-# Copyright © 2020 Revolution Robotics, Inc.
+# Copyright © 2021 Revolution Robotics, Inc.
 #
 # This script creates a bootable eMMC device with Debian root
 # and recovery filesystems. It must be run from a non-eMMC root
@@ -490,7 +490,7 @@ if ! $interactive; then
     trap 'pwr_led_on; stat_led_off; link_led_off; kill $cycle_leds_pid; exit' 0 1 2 15
 
     cycle_leds &
-    cycle_leds_pid=$!
+    declare cycle_leds_pid=$!
 fi
 
 partition_emmc "$device" "$part" || exit $?

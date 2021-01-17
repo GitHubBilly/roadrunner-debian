@@ -1,0 +1,9 @@
+[Unit]
+Description=Monitor /boot/cmdline.txt for changes
+Documentation=https://github.com/revolution-robotics/roadrunner-debian
+
+[Path]
+PathChanged=/boot/cmdline.txt
+
+[Install]
+WantedBy=multi-user.target
