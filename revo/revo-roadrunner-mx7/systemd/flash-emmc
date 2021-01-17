@@ -212,7 +212,8 @@ partition_emmc ()
 
     # Sizes in MiB
     # RECOVERYFS_SIZE must match that in recover-emmc.
-    local RECOVERYFS_SIZE=1792
+    # local RECOVERYFS_SIZE=1792
+    local RECOVERYFS_SIZE=1400
     local BOOTLOAD_RESERVE_SIZE=4
     local SPARE_SIZE=8
 
