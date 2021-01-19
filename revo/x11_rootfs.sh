@@ -572,6 +572,10 @@ EOF
     ln -s '/lib/systemd/system/exim4.service' \
        "${ROOTFS_BASE}/etc/systemd/system/multi-user.target.wants"
 
+    # Update systemd dbus socket
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/dbus.socket" \
+            "${ROOTFS_BASE}/lib/systemd/system"
+
     # END -- REVO i.MX7D update
 
     # install variscite-bt service
