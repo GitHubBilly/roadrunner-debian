@@ -293,6 +293,7 @@ protected_install udisks2
 
 ## Enable graphical desktop.
 # protected_install xorg
+# protected_install xserver-xorg-video-dummy
 # protected_install xfce4
 # protected_install xfce4-goodies
 
@@ -555,6 +556,19 @@ EOF
     # Add default firewalld configuration.
     install -m 0644 "${G_VENDOR_PATH}/resources/firewalld/public.xml" \
             "${RECOVERYFS_BASE}/etc/firewalld/zones"
+
+    # Add Random Number Generator daemon (rngd) service
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/rngd.service" \
+            "${RECOVERYFS_BASE}/lib/systemd/system"
+    ln -s '/lib/systemd/system/rngd.service' \
+       "${RECOVERYFS_BASE}/etc/systemd/system/multi-user.target.wants"
+
+    # Add Exim4 service
+    install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/systemd/exim4.service" \
+            "${RECOVERYFS_BASE}/lib/systemd/system"
+    ln -s '/lib/systemd/system/exim4.service' \
+       "${RECOVERYFS_BASE}/etc/systemd/system/multi-user.target.wants"
+
     # END -- REVO i.MX7D update
 
     # install variscite-bt service
@@ -706,6 +720,12 @@ EOF
         -e "s;@NODE_GROUP@;${NODE_GROUP};" \
         -e "s;@NODE_USER@;${NODE_USER};" \
         ${RECOVERYFS_BASE}/usr/bin/install-node-lts
+
+    # Redirect all system mail user `revo'.
+    sed -i "\$a root: revo" "${RECOVERYFS_BASE}/etc/aliases"
+
+    # Remove /etc/init.d/rng-tools (started by rngd.service)
+    rm -f "${RECOVERYFS_BASE}/etc/init.d/rng-tools"
 
     # Configure /etc/default/zramswap
     install -m 0644 "${G_VENDOR_PATH}/${MACHINE}/zramswap" \

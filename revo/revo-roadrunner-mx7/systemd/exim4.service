@@ -1,0 +1,16 @@
+[Unit]
+Description=Exim Mail Transport Agent
+After=network.target
+
+[Service]
+PrivateTmp=true
+Environment=QUEUEINTERVAL=30m
+EnvironmentFile=-/etc/default/exim4
+ProtectSystem=full
+PIDFile=/run/exim4/exim.pid
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStartPre=/usr/bin/install -d -oDebian-exim -gDebian-exim -m750 /run/exim4
+ExecStart=/usr/sbin/exim4 -bd -q${QFLAGS}${QUEUEINTERVAL} $COMMONOPTIONS $QUEUERUNNEROPTIONS $SMTPLISTENEROPTIONS
+
+[Install]
+WantedBy=multi-user.target
